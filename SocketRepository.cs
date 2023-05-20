@@ -17,22 +17,30 @@ public class SocketRepository
 
     private async void WaitForSocketClose(SocketData socketData)
     {
-        byte[] buffer = new byte[1024 * 4];
-        WebSocketReceiveResult receiveResult = await socketData.WebSocket.ReceiveAsync(
-            new ArraySegment<byte>(buffer),
-            CancellationToken.None);
-
-        while (!receiveResult.CloseStatus.HasValue)
+        try
         {
-            receiveResult = await socketData.WebSocket.ReceiveAsync(
+            byte[] buffer = new byte[1024 * 4];
+            WebSocketReceiveResult receiveResult = await socketData.WebSocket.ReceiveAsync(
                 new ArraySegment<byte>(buffer),
                 CancellationToken.None);
-        }
 
-        await socketData.WebSocket.CloseAsync(
-            receiveResult.CloseStatus.Value,
-            receiveResult.CloseStatusDescription,
-            CancellationToken.None);
+            while (!receiveResult.CloseStatus.HasValue)
+            {
+                receiveResult = await socketData.WebSocket.ReceiveAsync(
+                    new ArraySegment<byte>(buffer),
+                    CancellationToken.None);
+            }
+
+            await socketData.WebSocket.CloseAsync(
+                receiveResult.CloseStatus.Value,
+                receiveResult.CloseStatusDescription,
+                CancellationToken.None);
+        }
+        catch (Exception e)
+        {
+            socketData.Tcs.SetException(e);
+            return;
+        }
 
         socketData.Tcs.SetCanceled();
     }
