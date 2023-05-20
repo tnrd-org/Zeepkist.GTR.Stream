@@ -10,11 +10,35 @@ public class SocketRepository
 
     public void Add(WebSocket webSocket, TaskCompletionSource<object> tcs)
     {
-        webSockets.Add(new SocketData(webSocket, tcs));
+        SocketData socketData = new SocketData(webSocket, tcs);
+        webSockets.Add(socketData);
+        WaitForSocketClose(socketData);
+    }
+
+    private async void WaitForSocketClose(SocketData socketData)
+    {
+        byte[] buffer = new byte[1024 * 4];
+        WebSocketReceiveResult receiveResult = await socketData.WebSocket.ReceiveAsync(
+            new ArraySegment<byte>(buffer),
+            CancellationToken.None);
+
+        while (!receiveResult.CloseStatus.HasValue)
+        {
+            receiveResult = await socketData.WebSocket.ReceiveAsync(
+                new ArraySegment<byte>(buffer),
+                CancellationToken.None);
+        }
+
+        await socketData.WebSocket.CloseAsync(
+            receiveResult.CloseStatus.Value,
+            receiveResult.CloseStatusDescription,
+            CancellationToken.None);
+
+        socketData.Tcs.SetCanceled();
     }
 
     public IReadOnlyList<SocketData> GetSockets()
     {
-        return new List<SocketData>(webSockets.Where(x => !x.Tcs.Task.IsFaulted));
+        return new List<SocketData>(webSockets.Where(x => !x.Tcs.Task.IsCanceled && !x.Tcs.Task.IsFaulted));
     }
 }

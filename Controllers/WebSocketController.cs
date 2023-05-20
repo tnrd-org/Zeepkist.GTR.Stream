@@ -20,7 +20,14 @@ public class WebSocketController : ControllerBase
             using WebSocket webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
             TaskCompletionSource<object> tcs = new TaskCompletionSource<object>();
             repository.Add(webSocket, tcs);
-            await tcs.Task;
+            try
+            {
+                await tcs.Task;
+            }
+            catch (TaskCanceledException)
+            {
+                // Left empty on purpose
+            }
         }
         else
         {
