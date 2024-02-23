@@ -22,7 +22,7 @@ internal class RabbitWorker : IHostedService
     /// <inheritdoc />
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        ConnectionFactory factory = new ConnectionFactory()
+        ConnectionFactory factory = new()
         {
             HostName = options.Host,
             Port = options.Port,
@@ -33,18 +33,18 @@ internal class RabbitWorker : IHostedService
         connection = factory.CreateConnection();
         channel = connection.CreateModel();
 
-        channel.ExchangeDeclare(exchange: "records", type: ExchangeType.Fanout);
+        channel.ExchangeDeclare("stream", ExchangeType.Fanout);
 
         string? queueName = channel.QueueDeclare().QueueName;
-        channel.QueueBind(queue: queueName,
-            exchange: "records",
-            routingKey: string.Empty);
+        channel.QueueBind(queueName,
+            "stream",
+            string.Empty);
 
-        EventingBasicConsumer consumer = new EventingBasicConsumer(channel);
+        EventingBasicConsumer consumer = new(channel);
         consumer.Received += OnReceived;
-        channel.BasicConsume(queue: queueName,
-            autoAck: true,
-            consumer: consumer);
+        channel.BasicConsume(queueName,
+            true,
+            consumer);
 
         return Task.CompletedTask;
     }
