@@ -1,6 +1,15 @@
+using Serilog;
 using TNRD.Zeepkist.GTR.Stream;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((context, configuration) =>
+{
+    configuration
+        .Enrich.FromLogContext()
+        .MinimumLevel.Information()
+        .WriteTo.Console();
+});
 
 builder.Services.AddControllers();
 
@@ -12,7 +21,7 @@ builder.Services.AddHostedService<RabbitWorker>();
 
 WebApplication app = builder.Build();
 
-WebSocketOptions options = new WebSocketOptions()
+WebSocketOptions options = new()
 {
     KeepAliveInterval = TimeSpan.FromMinutes(2)
 };
