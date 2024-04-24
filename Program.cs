@@ -1,3 +1,4 @@
+using System.Net;
 using Microsoft.AspNetCore.HttpOverrides;
 using Serilog;
 using TNRD.Zeepkist.GTR.Stream;
@@ -13,6 +14,11 @@ builder.Host.UseSerilog((context, configuration) =>
 });
 
 builder.Services.AddControllers();
+
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.KnownProxies.Add(IPAddress.Parse("172.20.0.2"));
+});
 
 builder.Services.AddSingleton<SocketRepository>();
 builder.Services.AddSingleton<SocketWriter>();
