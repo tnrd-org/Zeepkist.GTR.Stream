@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.HttpOverrides;
 using Serilog;
 using TNRD.Zeepkist.GTR.Stream;
 
@@ -27,6 +28,11 @@ WebSocketOptions options = new()
 };
 
 app.UseWebSockets(options);
+
+app.UseForwardedHeaders(new ForwardedHeadersOptions()
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
 
 app.UseDefaultFiles();
 app.UseStaticFiles();

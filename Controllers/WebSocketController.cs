@@ -20,11 +20,7 @@ public class WebSocketController : ControllerBase
     {
         if (HttpContext.WebSockets.IsWebSocketRequest)
         {
-            logger.LogInformation("Incoming connection: {IP}:{port}; {Host}; {ForwardedFor}",
-                HttpContext.Connection.RemoteIpAddress,
-                HttpContext.Connection.RemotePort, 
-                Request.Host,
-                HttpContext.GetServerVariable("X_FORWARDED_FOR"));
+            logger.LogInformation("Incoming connection: {IP}", HttpContext.Connection.RemoteIpAddress);
             
             using WebSocket webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
             TaskCompletionSource<object> tcs = new();
