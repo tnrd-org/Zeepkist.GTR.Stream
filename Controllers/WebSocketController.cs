@@ -20,6 +20,10 @@ public class WebSocketController : ControllerBase
     {
         if (HttpContext.WebSockets.IsWebSocketRequest)
         {
+            logger.LogInformation("Incoming connection: {IP}:{port}",
+                HttpContext.Connection.RemoteIpAddress,
+                HttpContext.Connection.RemotePort);
+            
             using WebSocket webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
             TaskCompletionSource<object> tcs = new();
             repository.Add(webSocket, tcs);
