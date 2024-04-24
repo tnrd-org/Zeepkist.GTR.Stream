@@ -6,10 +6,13 @@ namespace TNRD.Zeepkist.GTR.Stream.Controllers;
 public class WebSocketController : ControllerBase
 {
     private readonly SocketRepository repository;
+    private readonly ILogger<WebSocketController> logger;
 
-    public WebSocketController(SocketWriter socketWriter, SocketRepository repository)
+    public WebSocketController(SocketWriter socketWriter, SocketRepository repository,
+        ILogger<WebSocketController> logger)
     {
         this.repository = repository;
+        this.logger = logger;
     }
 
     [Route("/ws")]
@@ -18,7 +21,7 @@ public class WebSocketController : ControllerBase
         if (HttpContext.WebSockets.IsWebSocketRequest)
         {
             using WebSocket webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
-            TaskCompletionSource<object> tcs = new TaskCompletionSource<object>();
+            TaskCompletionSource<object> tcs = new();
             repository.Add(webSocket, tcs);
             try
             {
@@ -27,6 +30,11 @@ public class WebSocketController : ControllerBase
             catch (TaskCanceledException)
             {
                 // Left empty on purpose
+            }
+            catch (Exception e)
+            {
+                // TODO: Log
+                logger.LogError(e, "Error occurred while handling WebSocket connection");
             }
         }
         else
@@ -37,8 +45,8 @@ public class WebSocketController : ControllerBase
 
     private static async Task Echo(WebSocket webSocket)
     {
-        var buffer = new byte[1024 * 4];
-        var receiveResult = await webSocket.ReceiveAsync(
+        byte[] buffer = new byte[1024 * 4];
+        WebSocketReceiveResult receiveResult = await webSocket.ReceiveAsync(
             new ArraySegment<byte>(buffer),
             CancellationToken.None);
 

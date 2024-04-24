@@ -9,13 +9,15 @@ internal class RabbitWorker : IHostedService
 {
     private readonly RabbitOptions options;
     private readonly SocketWriter writer;
+    private readonly ILogger<RabbitWorker> logger;
 
     private IConnection connection = null!;
     private IModel channel = null!;
 
-    public RabbitWorker(IOptions<RabbitOptions> options, SocketWriter writer)
+    public RabbitWorker(IOptions<RabbitOptions> options, SocketWriter writer, ILogger<RabbitWorker> logger)
     {
         this.writer = writer;
+        this.logger = logger;
         this.options = options.Value;
     }
 
@@ -53,6 +55,7 @@ internal class RabbitWorker : IHostedService
     {
         byte[] body = e.Body.ToArray();
         string message = Encoding.UTF8.GetString(body);
+        logger.LogInformation("Received message from RabbitMQ: {message}", message);
         writer.Write(message);
     }
 
